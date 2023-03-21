@@ -11,6 +11,37 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
     add_index :conversations, :last_updated_by_id
     add_index :conversations, :last_message_id
 
+    create_table :conversation_members, id: :uuid do |t|
+      t.boolean :admin, default: false
+      t.boolean :allow_notification, default: true
+      t.string :conversation_status, default: false
+      t.boolean :has_acknowledge, default: false
+      t.boolean :has_mention, default: false
+      t.boolean :has_priority, default: false
+      t.boolean :keep_history, default: false
+      t.string :last_deliver
+      t.string :last_read
+      t.boolean :muted, default: false
+      t.boolean :favourited
+      t.string :status
+      t.string :unmute_in :string
+      t.integer :unread
+      #t.references :conversation
+      t.uuid :conversation_id
+      #t.references :speaker
+      #t.references :user
+      t.uuid :user_id
+      #t.references :message
+      t.uuid :message_id
+      t.datetime :deleted_at
+      t.timestamps
+    end
+
+    add_index :conversation_members, :conversation_id
+    add_index :conversation_members, :deleted_at
+    add_index :conversation_members, :message_id
+    add_index :conversation_members, :user_id
+
     create_table :messages, id: :uuid do |t|
       t.boolean :pinned, default: false
       t.datetime :pinned_at
@@ -22,8 +53,10 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       t.string :timetoken
       t.string :type_of_message
       t.string :url
-      t.references :conversation
-      t.reference :parent
+      #t.references :conversation
+      t.uuid :conversation_id
+      #t.references :parent
+      t.uuid :parent_id
       t.datetime :deleted_at
       t.timestamps
     end
@@ -32,16 +65,23 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
     add_index :messages, :deleted_at
     add_index :messages, :parent_id
     add_index :messages, :timetoken
-    add_index :messages, :user_id
 
     create_table :reads, id: :uuid do |t|
       t.jsonb :message_action_response
       t.string :message_action_status
       t.string :message_action_status
-      t.references :readable, polymorphic: true, index: true
-      t.references :user
+      #t.references :readable, polymorphic: true, index: true
+      t.uuid :readable_id
+      t.string :readable_type
+      #t.references :speaker
+      #t.references :user
+      t.uuid :user_id
       t.timestamps
     end
+
+    add_index :reads, :readable_id
+    add_index :reads, [:readable_id, :readable_type]
+    add_index :reads, :user_id
 
   end
 end
