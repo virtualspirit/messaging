@@ -11,7 +11,5 @@ module Messaging
     has_many Messaging.speaker_class.demodulize.underscore.pluralize.to_sym, through: :conversation_members
     has_one :recent_message, -> { where("system_message = false").order('created_at DESC')  }, class_name: Messaging.config.message_class
 
-
-
   end
 end

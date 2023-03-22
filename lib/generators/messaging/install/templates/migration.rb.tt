@@ -16,7 +16,7 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       t.boolean :allow_notification, default: true
       t.string :conversation_status, default: false
       t.boolean :has_acknowledge, default: false
-      t.boolean :has_mention, default: false
+      #t.boolean :has_mention, default: false
       t.boolean :has_priority, default: false
       t.boolean :keep_history, default: false
       t.string :last_deliver
@@ -50,9 +50,9 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       t.boolean :read, default: false
       t.boolean :system_message, default: false
       t.text :text
-      t.string :timetoken
-      t.string :type_of_message
-      t.string :url
+      #t.string :timetoken
+      #t.string :type_of_message
+      #t.string :url
       #t.references :conversation
       t.uuid :conversation_id
       #t.references :parent
