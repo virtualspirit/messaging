@@ -83,5 +83,17 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
     add_index :reads, [:readable_id, :readable_type]
     add_index :reads, :user_id
 
+    create_table :mentions, id: :uuid do |t|
+      t.string :full_name
+      t.uuid :message_id
+      t.string :mention_to
+      t.uuid :mentionable_id
+      t.string :mentionable_type
+      t.timestamps
+    end
+
+    add_index :mentions, :message_id
+    add_index :mentions, [:mentionable_id, :mentionable_type]
+
   end
 end

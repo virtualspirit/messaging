@@ -1,5 +1,6 @@
 require "messaging/version"
 require "messaging/railtie"
+require 'messaging/engine'
 require "messaging/configuration"
 
 require 'paranoia'

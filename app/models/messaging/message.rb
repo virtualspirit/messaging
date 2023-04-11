@@ -3,7 +3,7 @@ module Messaging
 
     self.table_name = "messages"
 
-    acts_as_paranoid
+    #acts_as_paranoid
 
     # ATTACHMENT = ["image", "video", "audio", "file"]
     # RELATIONS = ["logbook", "poll", "task", "notes", "map", "link", "contact", "meeting", "event"]

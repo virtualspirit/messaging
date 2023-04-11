@@ -5,9 +5,9 @@ Gem::Specification.new do |spec|
   spec.version     = Messaging::VERSION
   spec.authors     = [""]
   spec.email       = ["ihsaneddin@gmail.com"]
-  spec.homepage    = "messaging.com"
+  spec.homepage    = "https://github.com/virtualspirit/chatting"
   spec.summary     = "Summary of Messaging."
-  spec.description = "TODO: Description of Messaging."
+  spec.description = "Description of Messaging."
     spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the "allowed_push_host"
