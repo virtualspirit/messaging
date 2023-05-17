@@ -24,7 +24,7 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       t.boolean :muted, default: false
       t.boolean :favourited
       t.string :status
-      t.string :unmute_in :string
+      t.string :unmute_in, :string
       t.integer :unread
       #t.references :conversation
       t.uuid :conversation_id
@@ -64,11 +64,10 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
     add_index :messages, :conversation_id
     add_index :messages, :deleted_at
     add_index :messages, :parent_id
-    add_index :messages, :timetoken
+    # add_index :messages, :timetoken
 
     create_table :reads, id: :uuid do |t|
       t.jsonb :message_action_response
-      t.string :message_action_status
       t.string :message_action_status
       #t.references :readable, polymorphic: true, index: true
       t.uuid :readable_id

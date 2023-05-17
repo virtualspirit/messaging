@@ -1,0 +1,10 @@
+Messaging.config.setup do |config|
+
+  # config.events.configure do |event|
+  #   event.subscribe 'conversation.after_create', AfterConversationCreate.new
+  #   event.subscribe 'conversation.after_create' do |conversation|
+  #     conversation.touch
+  #   end
+  # end
+
+end

@@ -1,5 +1,9 @@
+require 'messaging'
+
 module Messaging
   module Configuration
+
+    autoload :Events, "messaging/configuration/events"
 
     mattr_accessor :_api
 
@@ -18,8 +22,15 @@ module Messaging
     mattr_accessor :read_class
     @@read_class = "Messaging::Read"
 
+    mattr_accessor :events
+    @@events = Messaging::Configuration::Events
+
     def self.setup &block
-      yield self
+      block.arity.zero? ? instance_eval(&block) : yield(self)
+    end
+
+    def configure_events &block
+      @@events.configure &block
     end
 
   end
