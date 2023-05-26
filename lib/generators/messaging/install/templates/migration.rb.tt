@@ -26,13 +26,10 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       t.string :status
       t.string :unmute_in, :string
       t.integer :unread
-      #t.references :conversation
-      t.uuid :conversation_id
+      t.references :conversation, type: :uuid
       #t.references :speaker
-      #t.references :user
-      t.uuid :user_id
-      #t.references :message
-      t.uuid :message_id
+      t.references :user, type: :uuid
+      t.references :message, type: :uuid
       t.datetime :deleted_at
       t.timestamps
     end
@@ -54,7 +51,7 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
       #t.string :type_of_message
       #t.string :url
       #t.references :conversation
-      t.uuid :conversation_id
+      t.references :user, :conversation, type: :uuid
       #t.references :parent
       t.uuid :parent_id
       t.datetime :deleted_at
@@ -62,6 +59,7 @@ class CreateMessagingTables < ActiveRecord::Migration[7.0]
     end
 
     add_index :messages, :conversation_id
+    add_index :messages, :user_id
     add_index :messages, :deleted_at
     add_index :messages, :parent_id
     # add_index :messages, :timetoken

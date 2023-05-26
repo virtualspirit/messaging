@@ -19,8 +19,11 @@ module Messaging
     mattr_accessor :conversation_member_class
     @@conversation_member_class = "Messaging::ConversationMember"
 
-    mattr_accessor :read_class
-    @@read_class = "Messaging::Read"
+    mattr_accessor :receipt_class
+    @@receipt_class = "Messaging::Read"
+
+    mattr_accessor :mention_class
+    @@mention_class = "Messaging::Mention"
 
     mattr_accessor :events
     @@events = Messaging::Configuration::Events

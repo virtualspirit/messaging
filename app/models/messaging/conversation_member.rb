@@ -3,13 +3,14 @@ module Messaging
 
     self.table_name = "conversation_members"
 
-    belongs_to :updated_by, class_name: Messaging.config.speaker_class, foreign_key: "last_updated_by_id", optional: true
-    belongs_to :last_message, class_name: Messaging.config.message_class, foreign_key: "last_message_id", optional: true
-    has_many :conversation_members, dependent: :destroy, class_name: Messaging.config.conversation_member_class
-    has_many :conversation_members_with_deleted, -> { with_deleted }, class_name: Messaging.config.conversation_member_class
-    has_many :messages, dependent: :destroy, class_name: Messaging.config.message_class
-    has_many Messaging.speaker_class.demodulize.underscore.pluralize.to_sym, through: :conversation_members
-    has_one :recent_message, -> { where("system_message = false").order('created_at DESC')  }, class_name: Messaging.config.message_class
+    belongs_to :conversation, counter_cache: :total_participants, class_name: @@conversation_class, foreign_key: :conversation_id
+    belongs_to @@speaker_class.demodulize.singularize.downcase, class_name: @@speaker_class, foreign_key: "user_id"
+    belongs_to Messaging.speaker_class.demodulize.underscore.singularize.to_sym, class_name: Messaging.speaker_class
+    belongs_to :all_user, -> { with_deleted }, optional: true, class_name: "User", foreign_key: "user_id"
+
+    has_one :last_message, through: :conversation
+    has_one :last_updated_by, through: :conversation
+
 
   end
 end
