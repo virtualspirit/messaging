@@ -24,5 +24,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.0.3.1"
   spec.add_dependency "paranoia", "2.6.0"
+  spec.add_dependency 'options_model'
 
 end

@@ -4,8 +4,10 @@ module Messaging
   module Configuration
 
     autoload :Events, "messaging/configuration/events"
+    autoload :Api, "messaging/configuration/api"
 
     mattr_accessor :_api
+    @@_api = Messaging::Configuration::Api
 
     mattr_accessor :speaker_class
     @@speaker_class = "User"
@@ -32,8 +34,12 @@ module Messaging
       block.arity.zero? ? instance_eval(&block) : yield(self)
     end
 
-    def configure_events &block
+    def self.configure_events &block
       @@events.configure &block
+    end
+
+    def self.api
+      @@_api
     end
 
   end

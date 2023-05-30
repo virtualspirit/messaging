@@ -4,6 +4,7 @@ require 'messaging/engine'
 require "messaging/configuration"
 
 require 'paranoia'
+require 'options_model'
 
 module Messaging
   # Your code goes here...
@@ -16,3 +17,6 @@ module Messaging
   end
 
 end
+
+
+require 'messaging/hooks'
