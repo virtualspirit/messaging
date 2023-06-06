@@ -51,15 +51,15 @@ module Messaging
           links << %(<#{url}?#{new_params.to_param}>; rel="#{k}")
         end
 
-        total_header    = Helpers.config.total_header
-        per_page_header = Helpers.config.per_page_header
-        page_header     = Helpers.config.page_header
+        total    = Helpers.config.total
+        per_page = Helpers.config.per_page
+        page     = Helpers.config.page
         include_total   = Helpers.config.include_total
 
         headers['Link'] = links.join(', ') unless links.empty?
-        headers[per_page_header] = options[:per_page].to_s
-        headers[page_header] = options[:page].to_s unless page_header.nil?
-        headers[total_header] = total_count(pagy || collection, options).to_s if include_total
+        headers[per_page] = options[:per_page].to_s
+        headers[page] = options[:page].to_s unless page.nil?
+        headers[total] = total_count(pagy || collection, options).to_s if include_total
 
         return collection
       end
@@ -81,15 +81,15 @@ module Messaging
         class << self
 
           def config
-            Messaging.api.pagination.config
+            Messaging.config.api.pagination.config
           end
 
           def paginate(collection, options = {})
             options[:page]     = options[:page].to_i
             options[:page]     = 1 if options[:page] <= 0
-            options[:per_page] = options[:per_page].to_i
+            options[:per_page] = (options[:per_page] || config.per_page_count).to_i
 
-            case Messaging.api.pagination.config.paginator
+            case config.paginator
             when :pagy
               paginate_with_pagy(collection, options)
             when :kaminari
@@ -97,12 +97,12 @@ module Messaging
             when :will_paginate
               paginate_with_will_paginate(collection, options)
             else
-              raise StandardError, "Unknown paginator: #{Messaging.api.pagination.config.paginator}"
+              raise StandardError, "Unknown paginator: #{config.paginator}"
             end
           end
 
           def pages_from(collection, options = {})
-            return pagy_pages_from(collection) if Messaging.api.pagination.config.paginator == :pagy && collection.is_a?(Pagy)
+            return pagy_pages_from(collection) if config.paginator == :pagy && collection.is_a?(Pagy)
 
             {}.tap do |pages|
               unless collection.first_page?
@@ -110,15 +110,15 @@ module Messaging
                 pages[:prev]  = collection.current_page - 1
               end
 
-              unless collection.last_page? || (Messaging.api.pagination.config.paginator == :kaminari && collection.out_of_range?)
-                pages[:last] = collection.total_pages if Messaging.api.pagination.config.include_total
+              unless collection.last_page? || (config.paginator == :kaminari && collection.out_of_range?)
+                pages[:last] = collection.total_pages if config.include_total
                 pages[:next] = collection.current_page + 1
               end
             end
           end
 
           def total_from(collection)
-            case Messaging.api.pagination.config.paginator
+            case config.paginator
               when :pagy          then collection.count.to_s
               when :kaminari      then collection.total_count.to_s
               when :will_paginate then collection.total_entries.to_s
@@ -165,7 +165,7 @@ module Messaging
               end
 
               unless pagy.page == pagy.pages
-                pages[:last] = pagy.pages if Messaging.api.pagination.config.include_total
+                pages[:last] = pagy.pages if config.include_total
                 pages[:next] = pagy.next
               end
             end
@@ -180,7 +180,7 @@ module Messaging
 
             collection = Kaminari.paginate_array(collection, paginate_array_options) if collection.is_a?(Array)
             collection = collection.page(options[:page]).per(options[:per_page])
-            collection.without_count if !collection.is_a?(Array) && !Messaging.api.pagination.config.include_total
+            collection.without_count if !collection.is_a?(Array) && !config.include_total
             [collection, nil]
           end
 

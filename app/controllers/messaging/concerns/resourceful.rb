@@ -5,6 +5,28 @@ module Messaging
       extend ActiveSupport::Concern
       include Pagination
 
+      class Blocks
+
+        attr_accessor :blocks
+
+        def initialize blocks = []
+          self.blocks  = blocks || []
+        end
+
+        def call context, *args
+          ret = nil
+          blocks.each do |block|
+            if ret.nil?
+              ret = context.instance_exec *args, &block
+            else
+              ret = context.instance_exec ret, &block
+            end
+          end
+          ret
+        end
+
+      end
+
       included do
 
         class_attribute :resourceful_params_
@@ -31,7 +53,8 @@ module Messaging
               resource_actions: [ :show, :new, :create, :edit, :update, :destroy ],
               resources_actions: [ :index ],
               resource_params_attributes: [],
-              presenter: -> (data) {  data.as_json  }
+              presenter: -> (data) {  data  },
+              should_paginate: true
             }
           end
           if(key)
@@ -233,11 +256,6 @@ module Messaging
 
       def fetch_resources
         return unless @_resources.nil?
-        should_paginate = self.class.should_paginate?
-        if should_paginate.is_a?(Proc)
-          should_paginate = instance_exec(&should_paginate)
-        end
-        #@_resources = should_paginate ? paginate(_get_resources) : _get_resources
         @_resources = _get_resources
         instance_variable_set("@#{self.class.attr_accessor_name.pluralize}", @_resources)
       end
@@ -245,9 +263,7 @@ module Messaging
       def _get_resource
         got_resource = _identifier_param_present? ? _existing_resource : _new_resource
         got_resource = _existing_resource
-        if got_resource_callback = self.class.got_resource_callback
-          instance_exec(got_resource, &got_resource_callback)
-        end
+        got_resource_callback = get_value(:got_resource_callback, got_resource) || got_resource
         got_resource
       end
 
@@ -257,17 +273,11 @@ module Messaging
 
       def _identifier_param_present?
         identifier = _resource_identifier
-        if identifier.respond_to?(:call)
-          identifier = instance_exec(&identifier)
-        end
         params[identifier.to_sym].present?
       end
 
       def _model_klass
-        model_klass = self.class.model_klass
-        if model_klass.is_a?(Proc)
-          model_klass = instance_exec(&model_klass)
-        end
+        model_klass = get_value :model_klass
         model_klass
       end
 
@@ -284,10 +294,7 @@ module Messaging
       end
 
       def _resource_identifier
-        identifier = self.class.resource_identifier
-        if identifier.is_a?(Proc)
-          identifier = instance_exec &identifier
-        end
+        identifier = get_value :resource_identifier
         if identifier.blank?
           identifier = model_klass_constant.primary_key
         end
@@ -295,10 +302,7 @@ module Messaging
       end
 
       def _resource_finder_key
-        key = self.class.resource_finder_key
-        if key.is_a?(Proc)
-          key = instance_exec &key
-        end
+        key = get_value :resource_finder_key
         if key.blank?
           key = model_klass_constant.primary_key
         end
@@ -306,14 +310,8 @@ module Messaging
       end
 
       def _query
-        query = self.class.query_scope
-        if query.respond_to?(:call)
-          model = _apply_query_includes(model_klass_constant)
-          query = instance_exec(model, &query)
-        else
-          query = _apply_query_includes(model_klass_constant)
-          query = query.where.not id: nil
-        end
+        model = _apply_query_includes(model_klass_constant)
+        query = get_value(:query_scope, model) || model.where.not(id: nil)
         if(params[:order_by])
           query = query.order params[:order_by]
         end
@@ -321,12 +319,12 @@ module Messaging
       end
 
       def _apply_query_includes query
-        unless self.class.query_includes.blank?
-          includes = self.class.query_includes
+        _query_includes = get_value :query_includes
+        unless _query_includes.blank?
           if includes.is_a?(Array)
-            query = query.includes(*self.class.query_includes)
+            query = query.includes(*_query_includes)
           else
-            query = query.includes(self.class.query_includes)
+            query = query.includes(_query_includes)
           end
         end
         query
@@ -346,7 +344,7 @@ module Messaging
       end
 
       def _new_resource
-        model_klass_constant.new _resource_params
+        model_klass_constant.new permitted_attributes
       end
 
       def permitted_attributes
@@ -355,15 +353,12 @@ module Messaging
 
       def _resource_params
         attributes = {}
-        permitted_attributes = self.class.resource_params_attributes
-        if permitted_attributes.is_a?(Proc)
-          permitted_attributes = instance_exec(&permitted_attributes)
-        end
-        return attributes if permitted_attributes.blank?
+        _permitted_attributes = get_value :resource_params_attributes
+        return attributes if _permitted_attributes.blank?
         if params[self.class.attr_accessor_name.to_sym].present?
-          attributes = params.require(self.class.attr_accessor_name.to_sym).permit(permitted_attributes)
+          attributes = params.require(self.class.attr_accessor_name.to_sym).permit(_permitted_attributes)
         else
-          attributes = params.permit(permitted_attributes)
+          attributes = params.permit(_permitted_attributes)
         end
         attributes
       end
@@ -387,26 +382,28 @@ module Messaging
       end
 
       def present data, status = 200
-        render json: presenter(data), status: status
+        data = presenter(data)
+        render json: data, status: status
       end
 
       def presenter data
         options = {}
         if data.is_a?(ActiveRecord::Relation)
-          if self.class.should_paginate?
+          should_paginate = get_value :should_paginate
+          if should_paginate
             data = paginate(data)
             options[:meta] = pagination_info
           end
         end
-        _presenter = self.presenter
-        options[:data] = _presenter.is_a?(Proc) ? instance_exec(data, &_presenter) : data.as_json
+        _presenter = get_value :presenter, data
+        options[:data] = _presenter
         options
       end
 
       def pagination_info
         hash = {}
         if headers
-          config = Messaging.api.pagination.config
+          config = Messaging.config.api.pagination.config
           hash[config.per_page] = headers[config.per_page].to_i
           hash[config.page] = headers[config.page].to_i if config.page
           if config.include_total
@@ -420,6 +417,17 @@ module Messaging
           end
           hash
         end
+      end
+
+      def get_value key, *params
+        value = self.class.resourceful_params key.to_sym
+        if value.is_a?(Blocks)
+          value = value.call(self, *params)
+        end
+        if value.is_a?(Proc)
+          value = instance_exec(*params, &value)
+        end
+        value
       end
 
     end

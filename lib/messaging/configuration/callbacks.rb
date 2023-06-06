@@ -22,6 +22,7 @@ module Messaging
         end
 
         def call(context, *args)
+          context.instance_exec(*args, &@block)
         end
 
         delegate :hash, to: :instance_values

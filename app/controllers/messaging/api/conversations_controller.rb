@@ -2,7 +2,7 @@ module Messaging
   module Api
     class ConversationsController < BaseController
 
-      fetch_resource_and_collection do
+      fetch_resource_and_collection! do
         model_klass Messaging.config.conversation_class
       end
 

@@ -4,6 +4,29 @@ module Messaging
   module Configuration
     module Api
 
+      mattr_accessor :authenticate
+      @@authenticate = -> { nil }
+
+      class << self
+
+        def setup &block
+          block.arity.zero? ? instance_eval(&block) : yield(self)
+        end
+
+        def authenticate! &block
+          @@authenticate = block
+        end
+
+        def authenticate! &block
+          @@authenticate = block
+        end
+
+        def draw_callbacks &block
+          callback_set.draw_callbacks(&block)
+        end
+
+      end
+
       module Pagination
 
         class << self
@@ -14,6 +37,11 @@ module Messaging
           def config
             @config ||= Configuration.new
           end
+
+          def setup
+            configure
+          end
+
           alias :configuration :config
         end
 
@@ -103,7 +131,7 @@ module Messaging
               one are currently active. If possible, you should remove one or the other. If
               you can't, you _must_ configure messaging on your own. For example:
 
-              ApiPagination.configure do |config|
+              Messaging.config.api.configure do |config|
                 config.paginator = :kaminari
               end
 
@@ -151,7 +179,7 @@ module Messaging
 
       class ApiCallbackSet < Messaging::Configuration::Callbacks::CallbackSet
 
-        CALLBACKS = ['after_subscribe', 'after_unsubscribe', 'before_subscribe', 'before_unsubscribe', 'model_klass', 'resource_identifier', 'resource_finder_key', 'query_scope', 'query_includes', 'got_resource_callback', 'payload_data']
+        CALLBACKS = ['prepend_before_action', 'before_action', 'around_action', 'after_action', 'model_klass', 'resource_identifier', 'resource_finder_key', 'query_scope', 'query_includes', 'got_resource_callback', 'presenter', 'should_paginate']
 
         def self.draw_callbacks(constraints = {base: "Messaging::Api"}, &block)
           super constraints, &block
@@ -165,6 +193,11 @@ module Messaging
 
       class ApiCallback < Messaging::Configuration::Callbacks::Callback
 
+        def initialize(name, _namespace: [], **_options, &_block)
+          super
+          @class = "#{@class}_controller"
+        end
+
         def call context
           block = instance_variable_get("@block")
           resourceful_params = context.resourceful_params
@@ -174,7 +207,7 @@ module Messaging
               if options[:override] == true
                 value = block
               else
-                value = value >> block
+                value = Messaging::Concerns::Resourceful::Blocks.new([value, block])
               end
             else
               value = block
@@ -190,6 +223,9 @@ module Messaging
         end
 
       end
+
+      mattr_accessor :callback_set
+      @@callback_set = ApiCallbackSet
 
     end
   end

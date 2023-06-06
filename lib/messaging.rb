@@ -16,6 +16,10 @@ module Messaging
     @@configuration
   end
 
+  def self.setup &block
+    block.arity.zero? ? config.instance_eval(&block) : yield(config)
+  end
+
 end
 
 
