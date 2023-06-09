@@ -13,12 +13,13 @@ module Messaging
           self.blocks  = blocks || []
         end
 
-        def call context, *args
+        def call context, arg = nil
           ret = nil
           blocks.each do |block|
-            if ret.nil?
-              ret = context.instance_exec *args, &block
+            if arg.nil?
+              ret = context.instance_exec &block
             else
+              ret = arg
               ret = context.instance_exec ret, &block
             end
           end
@@ -248,14 +249,22 @@ module Messaging
 
       end
 
+      def records
+        @_resources
+      end
+
+      def record
+        @_resource
+      end
+
       def fetch_resource
-        return unless @_resource.nil?
+        return @_resource unless @_resource.nil?
         @_resource = _get_resource
         instance_variable_set("@#{self.class.attr_accessor_name}", @_resource)
       end
 
       def fetch_resources
-        return unless @_resources.nil?
+        return @_resources unless @_resources.nil?
         @_resources = _get_resources
         instance_variable_set("@#{self.class.attr_accessor_name.pluralize}", @_resources)
       end
@@ -264,7 +273,7 @@ module Messaging
         got_resource = _identifier_param_present? ? _existing_resource : _new_resource
         got_resource = _existing_resource
         got_resource_callback = get_value(:got_resource_callback, got_resource) || got_resource
-        got_resource
+        got_resource_callback
       end
 
       def _get_resources
@@ -419,13 +428,21 @@ module Messaging
         end
       end
 
-      def get_value key, *params
+      def get_value key, arg = nil
         value = self.class.resourceful_params key.to_sym
         if value.is_a?(Blocks)
-          value = value.call(self, *params)
+          if arg
+            value = value.call(self, arg)
+          else
+            value = value.call(self)
+          end
         end
         if value.is_a?(Proc)
-          value = instance_exec(*params, &value)
+          if arg
+            value = instance_exec(arg, &value)
+          else
+            value = instance_exec(&value)
+          end
         end
         value
       end

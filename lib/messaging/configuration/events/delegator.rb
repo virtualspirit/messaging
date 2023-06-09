@@ -43,7 +43,7 @@ module Messaging
         end
 
         mattr_accessor :namespace
-        @@namespace = :messaging
+        @@namespace = Messaging.config.events.default_namespace
 
         private
 

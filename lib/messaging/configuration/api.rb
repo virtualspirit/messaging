@@ -207,7 +207,11 @@ module Messaging
               if options[:override] == true
                 value = block
               else
-                value = Messaging::Concerns::Resourceful::Blocks.new([value, block])
+                if value.is_a?(Messaging::Concerns::Resourceful::Blocks)
+                  value.blocks << block
+                else
+                  value = Messaging::Concerns::Resourceful::Blocks.new([value, block])
+                end
               end
             else
               value = block

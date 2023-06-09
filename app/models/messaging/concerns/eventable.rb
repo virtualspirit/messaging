@@ -12,6 +12,10 @@ module Messaging
         end
       end
 
+      def channel
+        "Chatting::Channels::#{self.class.name.demodulize}".constantize
+      end
+
     end
   end
 end
