@@ -7,7 +7,7 @@ module Messaging
     belongs_to :last_message, class_name: @@message_class, foreign_key: "last_message_id", optional: true
     has_many :conversation_members, dependent: :destroy, class_name: @@conversation_member_class
     has_many :conversation_members_with_deleted, -> { with_deleted }, class_name: @@conversation_member_class
-    has_many @@speaker_class.demodulize.pluralize.to_sym, through: :conversation_members
+    has_many plural_klass(@@speaker_class), through: :conversation_members
     has_many :messages, dependent: :destroy, class_name: @@message_class, foreign_key: "conversation_id"
     has_one :recent_message, -> { where("system_message = false").order('created_at DESC')  }, class_name: @@message_class, foreign_key: "conversation_id"
 

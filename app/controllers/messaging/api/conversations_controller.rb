@@ -4,6 +4,14 @@ module Messaging
 
       fetch_resource_and_collection! do
         model_klass Messaging.config.conversation_class
+        resource_params_attributes [
+          conversation_member_attributes: [:user_id, :id, :_destroy]
+        ]
+        got_resource_callback do
+        end
+        query_scope do |query|
+          query.where(user_id: current_speaker.id)
+        end
       end
 
       def index
