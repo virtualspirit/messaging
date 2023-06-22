@@ -2,6 +2,7 @@ module Messaging
   class Conversation < ApplicationRecord
 
     self.table_name = "conversations"
+    self.event_base_name = self.name
 
     belongs_to :last_updated_by, class_name: @@speaker_class, foreign_key: "last_updated_by_id", optional: true
     belongs_to :last_message, class_name: @@message_class, foreign_key: "last_message_id", optional: true

@@ -5,10 +5,20 @@ module Messaging
       extend ActiveSupport::Concern
 
       included do
-        [ :after_initialize, :after_find, :after_touch, :before_validation, :after_validation, :before_save, :around_save, :after_save, :before_create, :around_create, :after_create, :before_update, :around_update, :after_update, :before_destroy, :around_destroy, :after_destroy, :after_commit, :after_rollback ].each do  |callback|
-          send callback do
-            Messaging.config.events.instrument(type: "#{self.class.name.demodulize.downcase}.#{callback}", payload: self)
-          end
+        class_attribute :event_base_name
+        self.event_base_name = self.name
+        [ :after_initialize, :after_find, :after_touch, :before_validation, :after_validation, :before_save, :after_save, :before_create, :after_create, :before_update, :after_update, :before_destroy, :after_destroy, :after_commit, :after_rollback ].each do  |callback|
+          class_eval <<-CODE, __FILE__, __LINE__ + 1
+            def _callback_event_#{callback}
+              Messaging.config.events.instrument(type: self.class.event_base_name.demodulize.downcase + '.#{callback}', payload: self)
+            end
+          CODE
+          send callback, "_callback_event_#{callback}".to_sym
+          # send callback do
+          #   res = Messaging.config.events.instrument(type: "#{self.class.name.demodulize.downcase}.#{callback}", payload: self)
+          #   debugger
+          #   self
+          # end
         end
       end
 

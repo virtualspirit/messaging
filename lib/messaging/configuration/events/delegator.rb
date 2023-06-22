@@ -52,7 +52,7 @@ module Messaging
         end
 
         def name_with_namespace(name, delimiter: ".")
-          [@@namespace, name].join(delimiter)
+          [@@namespace, name].compact.join(delimiter)
         end
       end
     end
