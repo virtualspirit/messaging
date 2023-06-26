@@ -179,7 +179,7 @@ module Messaging
 
       class ApiCallbackSet < Messaging::Configuration::Callbacks::CallbackSet
 
-        CALLBACKS = ['prepend_before_action', 'before_action', 'around_action', 'after_action', 'model_klass', 'resource_identifier', 'resource_finder_key', 'query_scope', 'query_includes', 'got_resource_callback', 'presenter', 'should_paginate']
+        CALLBACKS = ['prepend_before_action', 'before_action', 'around_action', 'after_action', 'model_klass', 'resource_identifier', 'resource_finder_key', 'query_scope', 'query_includes', 'got_resource_callback', 'presenter', 'should_paginate', 'resource_params_attributes']
 
         def self.draw_callbacks(constraints = {base: "Messaging::Api"}, &block)
           super constraints, &block
@@ -218,7 +218,8 @@ module Messaging
             end
             context.set_resource_param(name, value)
           else
-            context.send name, &block
+            args = __options[:args] || []
+            context.send name, *args, &block
           end
         end
 
