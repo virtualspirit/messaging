@@ -2,6 +2,7 @@ module Messaging
   class ConversationMember < ApplicationRecord
 
     self.table_name = "conversation_members"
+    self.event_base_name = self.name
 
     acts_as_paranoid
 

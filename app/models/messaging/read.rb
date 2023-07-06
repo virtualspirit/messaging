@@ -2,6 +2,7 @@ module Messaging
   class Read < ApplicationReprd
 
     self.table_name = "reads"
+    self.event_base_name = self.name
 
     belongs_to :readable, polymorphic: true
     belongs_to singular_klass(@@speaker_class), class_name: @@speaker_class, optional: false, foreign_key: "user_id"

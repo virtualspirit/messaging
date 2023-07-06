@@ -15,6 +15,7 @@ module Messaging
 
         def subscribe(name, callable = nil, &block)
           callable ||= block
+          # backend.subscribe name_with_namespace(name), NotificationAdapter.new(callable)
           backend.subscribe to_regexp(name), NotificationAdapter.new(callable)
         end
 
@@ -42,9 +43,6 @@ module Messaging
           end
         end
 
-        mattr_accessor :namespace
-        @@namespace = Messaging.config.events.default_namespace
-
         private
 
         def to_regexp(name)
@@ -52,7 +50,7 @@ module Messaging
         end
 
         def name_with_namespace(name, delimiter: ".")
-          [@@namespace, name].compact.join(delimiter)
+          [Messaging.config.events.default_namespace, name].compact.join(delimiter)
         end
       end
     end

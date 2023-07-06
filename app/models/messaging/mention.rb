@@ -2,6 +2,7 @@ module Messaging
   class Mention < ApplicationRecord
 
     self.table_name= 'mentions'
+    self.event_base_name = self.name
 
     belongs_to :mentionable, polymorphic: true, optional: true
     belongs_to singular_klass(@@speaker_class), class_name: @@speaker_class, optional: true, foreign_key: "user_id"

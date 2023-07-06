@@ -162,7 +162,7 @@ module Messaging
             if block_given?
               set_resource_param(:resource_finder_key, block)
             else
-              set_resource_param(:resource_finder_key, identifier)
+              set_resource_param(:resource_finder_key, key)
             end
           end
         end

@@ -2,6 +2,7 @@ module Messaging
   class Message < ApplicationRecord
 
     self.table_name = "messages"
+    self.event_base_name = self.name
 
     acts_as_paranoid
 
